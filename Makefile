@@ -1,14 +1,18 @@
-.PHONY: visualize train-vqbet resume-vqbet train-ditflow check-checkpoint attach
+.PHONY: train-vqbet train-ditflow train-arbet resume check visualize attach lint format test
+
+# Python
+export PYTHONPATH := $(CURDIR)/src
+PYTHON        := uv run python
 
 # Shared training defaults
 DATASET       := lerobot/pusht
 DEVICE        := cpu
-STEPS         := 100000
+STEPS         := 500000
 BATCH_SIZE    := 8
 SAVE_FREQ     := 10000
 EVAL_FREQ     := 10000
 
-TRAIN_CMD = uv run python -m lerobot.scripts.lerobot_train \
+TRAIN_CMD = $(PYTHON) -m lerobot.scripts.lerobot_train \
 	--dataset.repo_id=$(DATASET) \
 	--policy.push_to_hub=false \
 	--policy.device=$(DEVICE) \
@@ -18,10 +22,6 @@ TRAIN_CMD = uv run python -m lerobot.scripts.lerobot_train \
 	--eval_freq=$(EVAL_FREQ) \
 	--wandb.enable=true
 
-# Visualize the PushT dataset
-visualize:
-	uv run python scripts/visualize_pusht.py
-
 # Train VQ-BeT on PushT from scratch
 train-vqbet:
 	$(TRAIN_CMD) --policy.type=vqbet
@@ -30,23 +30,45 @@ train-vqbet:
 train-ditflow:
 	$(TRAIN_CMD) --policy.type=ditflow
 
-# Resume VQ-BeT training from a checkpoint
-# Usage: make resume-vqbet CONFIG_PATH=outputs/train/2026-03-18/20-05-00_vqbet/checkpoints/050000/pretrained_model/train_config.json
-resume-vqbet:
-ifndef CONFIG_PATH
-	$(error CONFIG_PATH is required. Usage: make resume-vqbet CONFIG_PATH=outputs/train/<date>/<time>_vqbet/checkpoints/<step>/pretrained_model/train_config.json)
+# Train ARBeT on PushT from scratch
+train-arbet:
+	$(TRAIN_CMD) --policy.type=arbet
+
+# Resume any policy from a checkpoint
+# Usage: make resume POLICY=vqbet CONFIG_PATH=<path to train_config.json>
+resume:
+ifndef POLICY
+	$(error POLICY is required (vqbet, ditflow, arbet))
 endif
-	$(TRAIN_CMD) --policy.type=vqbet \
+ifndef CONFIG_PATH
+	$(error CONFIG_PATH is required)
+endif
+	$(TRAIN_CMD) --policy.type=$(POLICY) \
 		--resume=true \
 		--config_path=$(CONFIG_PATH)
 
 # Check a saved checkpoint
-# Usage: make check-checkpoint CHECKPOINT=outputs/train/2026-03-18/20-05-00_vqbet/checkpoints/050000
-check-checkpoint:
+# Usage: make check CHECKPOINT=<path to checkpoint dir>
+check:
 ifndef CHECKPOINT
-	$(error CHECKPOINT is required. Usage: make check-checkpoint CHECKPOINT=outputs/train/<date>/<time>_vqbet/checkpoints/<step>)
+	$(error CHECKPOINT is required. Usage: make check CHECKPOINT=outputs/train/<date>/<time>_vqbet/checkpoints/<step>)
 endif
-	uv run python scripts/check_checkpoint.py --checkpoint $(CHECKPOINT)
+	$(PYTHON) scripts/check_checkpoint.py --checkpoint $(CHECKPOINT)
+
+# Visualize the PushT dataset
+visualize:
+	$(PYTHON) scripts/visualize_pusht.py
+
+# Lint and format
+lint:
+	uv run ruff check --fix .
+
+format:
+	uv run ruff format .
+
+# Run tests
+test:
+	uv run pytest tests/ -v
 
 # Attach to a tmux session, creating it if it doesn't exist
 # Usage: make attach [SESSION=train]

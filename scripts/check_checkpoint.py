@@ -1,61 +1,19 @@
-"""Sanity check a VQ-BeT checkpoint: inspect weights, run rollouts in PushT, and save videos."""
+"""Run rollouts in PushT for a checkpoint and save videos."""
 
 import argparse
 from pathlib import Path
 
+import lerobot_policy_ditflow  # noqa: F401  — registers "ditflow" with PreTrainedConfig
 import torch
-from safetensors.torch import load_file
-
-
-def check_weights(model_dir: Path) -> dict:
-    """Inspect weight tensors for NaN/zero issues and print stats."""
-    import json
-
-    config = json.loads((model_dir / "config.json").read_text())
-    print(f"Policy type : {config['type']}")
-    print(f"Action shape: {config['output_features']['action']['shape']}")
-
-    weights = load_file(str(model_dir / "model.safetensors"))
-
-    total_params = 0
-    nan_keys = []
-    zero_keys = []
-
-    for key, tensor in weights.items():
-        n = tensor.numel()
-        total_params += n
-        if torch.isnan(tensor).any():
-            nan_keys.append(key)
-        # Bias tensors initialized to zero are expected — only flag non-bias all-zero tensors
-        if n > 1 and tensor.abs().max().item() == 0.0 and "bias" not in key:
-            zero_keys.append(key)
-
-    print(f"Total parameters: {total_params:,}")
-
-    if nan_keys:
-        print(f"\n!! NaN detected in {len(nan_keys)} tensor(s):")
-        for k in nan_keys:
-            print(f"   {k}")
-    else:
-        print("NaN check: PASS")
-
-    if zero_keys:
-        print(f"\n!! Unexpected all-zero tensors ({len(zero_keys)}):")
-        for k in zero_keys:
-            print(f"   {k}  shape={weights[k].shape}")
-    else:
-        print("Zero check: PASS (bias tensors excluded)")
-
-    return config
+from lerobot.configs.policies import PreTrainedConfig
+from lerobot.envs.configs import PushtEnv
+from lerobot.envs.factory import make_env, make_env_pre_post_processors
+from lerobot.policies.factory import make_policy, make_pre_post_processors
+from lerobot.scripts.lerobot_eval import eval_policy
 
 
 def run_rollouts(model_dir: Path, n_episodes: int, videos_dir: Path) -> None:
     """Load policy, run rollouts in PushT, print metrics, and save videos."""
-    from lerobot.configs.policies import PreTrainedConfig
-    from lerobot.envs.configs import PushtEnv
-    from lerobot.envs.factory import make_env, make_env_pre_post_processors
-    from lerobot.policies.factory import make_policy, make_pre_post_processors
-    from lerobot.scripts.lerobot_eval import eval_policy
 
     # Load policy from checkpoint
     policy_cfg = PreTrainedConfig.from_pretrained(str(model_dir))
@@ -127,11 +85,6 @@ def main():
         default=None,
         help="Directory to save rollout videos (default: <checkpoint>/eval_videos)",
     )
-    parser.add_argument(
-        "--weights-only",
-        action="store_true",
-        help="Only check weights, skip rollouts",
-    )
     args = parser.parse_args()
 
     checkpoint_dir = Path(args.checkpoint)
@@ -141,16 +94,8 @@ def main():
 
     print(f"Checkpoint: {checkpoint_dir}\n")
 
-    check_weights(model_dir)
-
-    if args.weights_only:
-        print("\n--- Weight checks passed ---")
-        return
-
     videos_dir = Path(args.videos_dir) if args.videos_dir else checkpoint_dir / "eval_videos"
     run_rollouts(model_dir, args.n_episodes, videos_dir)
-
-    print("\n--- All checks passed ---")
 
 
 if __name__ == "__main__":

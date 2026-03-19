@@ -7,5 +7,9 @@
     },
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "files.exclude": {
+        "uv.lock": true,
+        "**/*.egg-info": true
     }
 }
