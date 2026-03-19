@@ -1,0 +1,9 @@
+[project]
+name = "lerobot_policy_ditflow"
+version = "0.1.0"
+description = "DiTFlow policy plugin for LeRobot"
+requires-python = ">=3.12"
+dependencies = ["lerobot"]
+
+[tool.setuptools.packages.find]
+include = ["lerobot_policy_ditflow*"]

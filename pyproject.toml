@@ -7,29 +7,36 @@ requires-python = ">=3.12"
 dependencies = [
     "gym-pusht>=0.1.6",
     "lerobot",
+    "lerobot-policy-ditflow",
     "matplotlib>=3.10.8",
     "pymunk<7",
     "rerun-sdk>=0.26.2",
 ]
 
+[tool.uv.sources]
+lerobot-policy-ditflow = { path = "vendor/lerobot-policy-ditflow", editable = true }
+
 [dependency-groups]
-dev = [
-    "ruff>=0.15.6",
-]
+dev = ["ruff>=0.15.6"]
+
+[tool.pyright]
+ignore = [
+    "vendor",
+] # vendored code; PyTorch/HF types don't pass static analysis
 
 [tool.ruff]
 target-version = "py312"
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # pyflakes
-    "I",    # isort
-    "N",    # pep8-naming
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "SIM",  # flake8-simplify
-    "RUF",  # ruff-specific rules
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
 ]

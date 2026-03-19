@@ -1122,6 +1122,17 @@ wheels = [
 ]
 
 [[package]]
+name = "lerobot-policy-ditflow"
+version = "0.1.0"
+source = { editable = "vendor/lerobot-policy-ditflow" }
+dependencies = [
+    { name = "lerobot" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "lerobot" }]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2498,6 +2509,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "gym-pusht" },
     { name = "lerobot" },
+    { name = "lerobot-policy-ditflow" },
     { name = "matplotlib" },
     { name = "pymunk" },
     { name = "rerun-sdk" },
@@ -2512,6 +2524,7 @@ dev = [
 requires-dist = [
     { name = "gym-pusht", specifier = ">=0.1.6" },
     { name = "lerobot" },
+    { name = "lerobot-policy-ditflow", editable = "vendor/lerobot-policy-ditflow" },
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "pymunk", specifier = "<7" },
     { name = "rerun-sdk", specifier = ">=0.26.2" },
