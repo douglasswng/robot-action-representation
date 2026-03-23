@@ -6,9 +6,9 @@ PYTHON        := uv run python
 
 # Shared training defaults
 DATASET       := lerobot/pusht
-DEVICE        := cpu
-STEPS         := 500000
-BATCH_SIZE    := 8
+DEVICE        := gpu
+STEPS         := 200000
+BATCH_SIZE    := 64
 SAVE_FREQ     := 10000
 EVAL_FREQ     := 10000
 
@@ -28,7 +28,7 @@ train-vqbet:
 
 # Train DiTFlow on PushT from scratch
 train-ditflow:
-	$(TRAIN_CMD) --policy.type=ditflow
+	$(TRAIN_CMD) --policy.type=ditflow --batch_size=256
 
 # Train ARBeT on PushT from scratch
 train-arbet:

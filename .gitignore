@@ -11,3 +11,6 @@ wheels/
 
 # Training outputs
 outputs/
+
+# OS
+.DS_Store

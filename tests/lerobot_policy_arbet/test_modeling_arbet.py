@@ -215,6 +215,5 @@ class TestARBeTPolicy:
 
     def test_get_optim_params(self, policy):
         params = policy.get_optim_params()
-        assert "params" in params
-        param_list = list(params["params"])
+        param_list = list(params)
         assert len(param_list) > 0
